@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة كودجي - واجب الدرس الأول: تقنيات التشفير والمصادقة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0e1a;
+            --card-bg: #12182b;
+            --text-color: #e8edf5;
+            --accent-color: #6c5ce7;
+            --accent-glow: #a29bfe;
+            --success-color: #00b894;
+            --danger-color: #ff6b6b;
+            --warning-color: #fdcb6e;
+            --border-color: #2d3561;
+            --gradient-start: #6c5ce7;
+            --gradient-end: #0984e3;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 10% 20%, rgba(108,92,231,0.05) 0%, transparent 50%);
+        }
+        .top-progress-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: var(--border-color);
+            z-index: 1001;
+        }
+        .top-progress-bar .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        header {
+            background: linear-gradient(135deg, var(--card-bg), #0f1a2e);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 15px;
+            text-align: center;
+            margin-top: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(108,92,231,0.03) 0%, transparent 60%);
+            animation: headerGlow 8s ease-in-out infinite alternate;
+        }
+        @keyframes headerGlow {
+            0% { transform: translate(-10%, -10%); }
+            100% { transform: translate(10%, 10%); }
+        }
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo-img {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+            box-shadow: 0 0 30px rgba(108,92,231,0.3);
+        }
+        .instructor-img {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--warning-color);
+            box-shadow: 0 0 30px rgba(253,203,110,0.3);
+        }
+        .brand-text { text-align: right; }
+        .brand-text h1 {
+            color: #fff;
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-glow), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .brand-text p { color: var(--text-color); opacity:0.8; font-size:0.9rem; }
+        .header-badges { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+        .badge-ib {
+            background: rgba(108,92,231,0.2);
+            border: 1px solid var(--accent-color);
+            color: var(--accent-glow);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .container { max-width:1000px; margin:20px auto; padding:0 15px; }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: #fff;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-family: 'Cairo', sans-serif;
+        }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(108,92,231,0.4); }
+        .btn:disabled { opacity:0.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-secondary { background:var(--card-bg); border:1px solid var(--border-color); }
+        .btn-secondary:hover { background:var(--border-color); box-shadow:0 8px 25px rgba(0,0,0,0.3); }
+        .btn-success { background:linear-gradient(135deg, var(--success-color), #00a86b); }
+        .btn-warning { background:linear-gradient(135deg, var(--warning-color), #f39c12); color:#1a1a2e; }
+        .btn-danger { background:linear-gradient(135deg, var(--danger-color), #c0392b); }
+        .btn-copy { 
+            background: linear-gradient(135deg, #fdcb6e, #f39c12); 
+            color: #1a1a2e; 
+            padding: 16px 30px;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+        .btn-copy:hover { box-shadow:0 8px 25px rgba(253,203,110,0.5); transform:translateY(-2px); }
+        .btn-sm { padding: 8px 16px; font-size: 0.85rem; }
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+        .card:hover { border-color: var(--accent-color); }
+        .badge {
+            background: var(--border-color);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-color);
+            border: 1px solid transparent;
+        }
+        .badge-accent { background:rgba(108,92,231,0.2); border-color:var(--accent-color); color:var(--accent-glow); }
+        .badge-success { background:rgba(0,184,148,0.2); border-color:var(--success-color); color:var(--success-color); }
+        .badge-warning { background:rgba(253,203,110,0.2); border-color:var(--warning-color); color:var(--warning-color); }
+        .info-block { padding:15px 20px; border-radius:10px; margin:12px 0; background:rgba(108,92,231,0.06); border-right:4px solid var(--accent-color); }
+        .info-block.success { border-right-color:var(--success-color); background:rgba(0,184,148,0.06); }
+        .info-block.warning { border-right-color:var(--warning-color); background:rgba(253,203,110,0.06); }
+        .nav-controls { display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:20px; border-top:1px solid var(--border-color); flex-wrap:wrap; gap:10px; }
+        .options-list { list-style:none; padding:0; margin:15px 0; }
+        .option-item { padding:14px 18px; margin-bottom:10px; background:var(--bg-color); border:1px solid var(--border-color); border-radius:10px; cursor:pointer; display:flex; align-items:center; transition:all 0.2s; }
+        .option-item:hover { background:#1a2240; border-color:var(--accent-color); }
+        .option-item input { margin-left:12px; cursor:pointer; accent-color:var(--accent-color); width:18px; height:18px; }
+        .option-item.correct { background:rgba(0,184,148,0.15) !important; border-color:var(--success-color) !important; }
+        .option-item.wrong { background:rgba(255,107,107,0.15) !important; border-color:var(--danger-color) !important; }
+        .essay-area { width:100%; min-height:120px; background:var(--bg-color); border:1px solid var(--border-color); border-radius:10px; padding:15px; color:var(--text-color); font-family:'Cairo',sans-serif; font-size:1rem; line-height:1.9; resize:vertical; margin:10px 0; }
+        .essay-area:focus { outline:none; border-color:var(--accent-color); box-shadow:0 0 0 3px rgba(108,92,231,0.15); }
+        .feedback-msg { font-weight:700; margin:15px 0; font-size:1.05rem; padding:12px 18px; border-radius:10px; }
+        .feedback-msg.correct { color:var(--success-color); background:rgba(0,184,148,0.08); }
+        .feedback-msg.wrong { color:var(--danger-color); background:rgba(255,107,107,0.08); }
+        .feedback-msg.info { color:var(--warning-color); background:rgba(253,203,110,0.08); }
+        .certificate-box {
+            background: linear-gradient(145deg, #1a1f3a, #0d1225);
+            border: 3px double var(--accent-color);
+            padding: 40px 30px;
+            text-align: center;
+            border-radius: 16px;
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .certificate-box::before { content:'🏆'; position:absolute; top:-30px; right:-30px; font-size:120px; opacity:0.05; transform:rotate(15deg); }
+        .certificate-box h2 { color:#ffd700; font-size:2rem; margin-top:0; }
+        .certificate-box .student-name { font-size:1.8rem; color:var(--accent-glow); margin:15px 0; font-weight:700; }
+        .certificate-box .cert-score { font-size:1.4rem; color:var(--success-color); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .tab-nav {
+            display:flex;
+            gap:5px;
+            margin-bottom:20px;
+            flex-wrap:wrap;
+            background:var(--card-bg);
+            padding:5px;
+            border-radius:12px;
+            border:1px solid var(--border-color);
+        }
+        .tab-nav .tab-nav-btn {
+            padding:10px 20px;
+            border:none;
+            background:transparent;
+            color:var(--text-color);
+            border-radius:8px;
+            cursor:pointer;
+            font-family:'Cairo',sans-serif;
+            font-weight:700;
+            transition:all 0.3s;
+            flex:1;
+            min-width:100px;
+            text-align:center;
+        }
+        .tab-nav .tab-nav-btn.active { background:linear-gradient(135deg, var(--gradient-start), var(--gradient-end)); color:#fff; box-shadow:0 4px 20px rgba(108,92,231,0.3); }
+        .tab-nav .tab-nav-btn:hover:not(.active) { background:var(--border-color); }
+        .timer-box {
+            position: fixed;
+            top: 60px; left: 15px;
+            background: linear-gradient(135deg, var(--warning-color), #f39c12);
+            color: #1a1a2e;
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: 'Fira Code', monospace;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(253,203,110,0.3);
+            display: none;
+            font-size: 0.9rem;
+        }
+        .scroll-top {
+            position: fixed;
+            bottom: 30px; right: 30px;
+            background: var(--accent-color);
+            color: #fff;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 4px 20px rgba(108,92,231,0.3);
+            transition: all 0.3s;
+            display: none;
+        }
+        .scroll-top:hover { transform:scale(1.1); }
+        .report-details {
+            background: var(--bg-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 15px 0;
+            text-align: right;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+        }
+        .report-details .q-item {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 8px;
+        }
+        .report-details .q-item:last-child { border-bottom: none; }
+        .report-details .q-num { color: var(--accent-glow); font-weight: 700; }
+        .report-details .correct-ans { color: var(--success-color); }
+        .report-details .wrong-ans { color: var(--danger-color); }
+        .report-details .user-ans { color: var(--warning-color); }
+        .question-text {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffd700;
+            line-height: 1.8;
+            word-wrap: break-word;
+        }
+        .copy-success {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-color);
+            color: #fff;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 700;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 20px rgba(0,184,148,0.4);
+            text-align: center;
+            max-width: 90%;
+        }
+        .copy-success.show { display: block; animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp {
+            from { opacity:0; transform: translateX(-50%) translateY(20px); }
+            to { opacity:1; transform: translateX(-50%) translateY(0); }
+        }
+        .whatsapp-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 12px;
+            background: rgba(37, 211, 102, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(37, 211, 102, 0.2);
+            color: #25d366;
+            font-size: 0.95rem;
+        }
+        .whatsapp-hint span { font-size: 1.5rem; }
+
+        .essay-questions-list {
+            background: rgba(108,92,231,0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .essay-questions-list h3 {
+            color: var(--accent-glow);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .essay-question-item {
+            padding: 12px 15px;
+            background: var(--bg-color);
+            border-right: 3px solid var(--accent-color);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+        .essay-question-item .num {
+            color: var(--accent-glow);
+            font-weight: 700;
+            margin-left: 8px;
+        }
+
+        .mode-selector-box {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .mode-btn-big {
+            flex: 1;
+            min-width: 220px;
+            padding: 20px 25px;
+            border: 3px solid var(--border-color);
+            background: var(--bg-color);
+            color: var(--text-color);
+            border-radius: 16px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .mode-btn-big:hover { border-color: var(--accent-color); transform: translateY(-3px); }
+        .mode-btn-big.active[data-mode="electronic"] {
+            border-color: var(--accent-color);
+            background: rgba(108,92,231,0.15);
+            color: var(--accent-glow);
+            box-shadow: 0 8px 25px rgba(108,92,231,0.3);
+        }
+        .mode-btn-big.active[data-mode="paper"] {
+            border-color: var(--warning-color);
+            background: rgba(253,203,110,0.15);
+            color: var(--warning-color);
+            box-shadow: 0 8px 25px rgba(253,203,110,0.3);
+        }
+        .mode-btn-big .icon-big { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+        .mode-btn-big .desc { font-size: 0.8rem; opacity: 0.8; margin-top: 6px; font-weight: 400; }
+
+        .mode-content { display: none; }
+        .mode-content.active { display: block; }
+
+        .essay-each-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        .essay-each-item:focus-within { border-color: var(--accent-color); }
+        .essay-each-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .essay-each-num {
+            background: rgba(108,92,231,0.2);
+            color: var(--accent-glow);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .essay-each-text {
+            font-weight: 700;
+            color: #ffd700;
+            line-height: 1.8;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        .essay-each-item textarea {
+            width: 100%;
+            min-height: 100px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px 15px;
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.8;
+            resize: vertical;
+            margin-top: 10px;
+        }
+        .essay-each-item textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(108,92,231,0.15);
+        }
+        .essay-each-item.answered {
+            border-color: var(--success-color);
+        }
+        .essay-each-item.answered .essay-each-num {
+            background: rgba(0,184,148,0.2);
+            color: var(--success-color);
+        }
+
+        .upload-zone {
+            border: 3px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 35px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(253,203,110,0.03);
+        }
+        .upload-zone:hover {
+            border-color: var(--warning-color);
+            background: rgba(253,203,110,0.08);
+        }
+        .upload-zone.dragover {
+            border-color: var(--success-color);
+            background: rgba(0,184,148,0.08);
+        }
+        .upload-zone .icon { font-size: 3rem; display: block; margin-bottom: 12px; }
+        .upload-zone h4 { color: #fff; font-size: 1.1rem; margin-bottom: 6px; }
+        .upload-zone p { color: #a7a9be; font-size: 0.85rem; margin-bottom: 4px; }
+        .upload-zone input[type="file"] { display: none; }
+
+        .paper-images-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 18px;
+        }
+        .paper-image-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .paper-image-card:hover { border-color: var(--warning-color); }
+        .paper-image-card .img-wrapper {
+            width: 100%;
+            height: 140px;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .paper-image-card img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .paper-image-card .img-info {
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            color: #a7a9be;
+            text-align: center;
+        }
+        .paper-image-card .img-name {
+            color: #fff;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.8rem;
+            margin-bottom: 3px;
+        }
+        .paper-image-card .remove-btn {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: var(--danger-color);
+            color: #fff;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            opacity: 0.9;
+            transition: all 0.2s;
+        }
+        .paper-image-card .remove-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        .paper-status {
+            margin-top: 15px;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: none;
+            text-align: center;
+        }
+        .paper-status.show { display: block; }
+        .paper-status.loading { background: rgba(108,92,231,0.1); color: var(--accent-glow); }
+        .paper-status.success { background: rgba(0,184,148,0.1); color: var(--success-color); }
+        .paper-status.error { background: rgba(255,107,107,0.1); color: var(--danger-color); }
+
+        .paper-text-result {
+            margin-top: 18px;
+            padding: 15px 18px;
+            background: rgba(0,184,148,0.06);
+            border-right: 4px solid var(--success-color);
+            border-radius: 10px;
+            display: none;
+        }
+        .paper-text-result.show { display: block; }
+        .paper-text-result strong { color: var(--success-color); display: block; margin-bottom: 10px; font-size: 0.95rem; }
+        .paper-text-result textarea {
+            width: 100%;
+            min-height: 200px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            color: var(--text-color);
+            font-family: 'Cairo', sans-serif;
+            font-size: 1rem;
+            line-height: 1.9;
+            resize: vertical;
+        }
+
+        .spinner-sm {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(108,92,231,0.2);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .api-key-mini {
+            background: rgba(253,203,110,0.05);
+            border: 1px solid rgba(253,203,110,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .api-key-mini label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: var(--warning-color);
+            font-size: 0.85rem;
+        }
+        .api-key-mini input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            direction: ltr;
+        }
+        .api-key-mini input:focus { outline: none; border-color: var(--warning-color); }
+        .api-key-mini .hint {
+            color: #a7a9be;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        @media (max-width:768px) {
+            .header-content { flex-direction:column; gap:10px; }
+            .brand-text h1 { font-size:1.3rem; }
+            .logo-img, .instructor-img { width:80px; height:80px; }
+            .card { padding:15px; }
+            .timer-box { top:50px; left:10px; padding:5px 12px; font-size:0.75rem; }
+            .tab-nav .tab-nav-btn { min-width:60px; padding:8px 12px; font-size:0.8rem; }
+            .nav-controls .btn { padding:8px 15px; font-size:0.85rem; }
+            .question-text { font-size:1rem; }
+            .btn-copy { font-size:0.95rem; padding:14px 20px; }
+            .mode-btn-big { min-width: 100%; padding: 15px; }
+            .mode-btn-big .icon-big { font-size: 2rem; }
+            .paper-images-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+        }
+        @media (max-width:480px) {
+            .container { padding:0 10px; }
+            .brand-text h1 { font-size:1.1rem; }
+            .certificate-box { padding:20px 15px; }
+            .certificate-box h2 { font-size:1.4rem; }
+            .certificate-box .student-name { font-size:1.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="timer-box" id="timer-box">⏱️ <span id="timer-display">90:00</span></div>
+    <button class="scroll-top" id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+    <div class="copy-success" id="copy-success">✅ تم نسخ التقرير إلى الحافظة!</div>
+
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="logo1.png" alt="لوجو كودجي" class="logo-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E🧠%3C/text%3E%3C/svg%3E'">
+                <div class="brand-text">
+                    <h1>🧠 منصة كودجي - مهندس: اندرو مجدي</h1>
+                    <p>واجب الدرس الأول: تقنيات التشفير والمصادقة (الوحدة الثانية: الأمن السيبراني)</p>
+                </div>
+                <img src="logo2.png" alt="المهندس أندرو" class="instructor-img" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E👨‍🏫%3C/text%3E%3C/svg%3E'">
+            </div>
+            <div class="header-badges">
+                <span class="badge-ib">🛡️ الوحدة الثانية</span>
+                <span class="badge-ib">🔐 الدرس الأول</span>
+                <span class="badge-ib">🇪🇬 مصر</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tab-nav" id="main-tabs">
+            <button class="tab-nav-btn" data-tab="instructions" onclick="switchMainTab('instructions')">📖 تعليمات</button>
+            <button class="tab-nav-btn active" data-tab="mcq" onclick="switchMainTab('mcq')">📝 الاختياري</button>
+            <button class="tab-nav-btn" data-tab="essay" onclick="switchMainTab('essay')">✍️ المقالي</button>
+            <button class="tab-nav-btn" data-tab="result" onclick="switchMainTab('result')">🏆 النتيجة</button>
+        </div>
+
+        <!-- تبويب التعليمات -->
+        <div class="tab-content" id="tab-instructions">
+            <section class="card">
+                <h2>📖 تعليمات الواجب</h2>
+                <div class="info-block warning">
+                    <p style="font-size:1.05rem;line-height:2;">
+                        <strong>📌 مكونات الواجب:</strong><br>
+                        • <strong>20 سؤال اختياري</strong> — حل إلكتروني تفاعلي متزامن<br>
+                        • <strong>10 أسئلة مقالية</strong> (تغطي تقنيات التشفير والمصادقة) — تختار طريقة الحل:<br>
+                        &nbsp;&nbsp;&nbsp;💻 <strong>حل إلكتروني:</strong> لكل سؤال مربع إجابة خاص به<br>
+                        &nbsp;&nbsp;&nbsp;📷 <strong>حل ورقي:</strong> تصوّر ورقتك (<strong>حتى 3 صور</strong>)، وترفعها لتحويلها لنص ذكي بواسطة AI<br><br>
+
+                        <strong>📝 تعليمات الاختياري:</strong><br>
+                        1. اختر الإجابة الصحيحة لكل سؤال.<br>
+                        2. اضغط "تحقق" لمعرفة الإجابة الصحيحة وتفاصيلها.<br><br>
+
+                        <strong>✍️ تعليمات المقالي:</strong><br>
+                        1. جميع الأسئلة المقالية العشرات يمكنك قراءتها معاً.<br>
+                        2. اختر <strong>حل إلكتروني</strong> أو <strong>حل ورقي</strong> عبر تصوير الورقة.<br>
+                        3. الأسئلة مصممة وفق معايير البكالوريا لقياس فهم بروتوكولات HTTPS ومصافحة TLS و2FA/MFA والتوقيعات الرقمية.<br><br>
+
+                        <strong>🏆 التقرير النهائي:</strong><br>
+                        يجمع إجاباتك كاملة جاهزة للنسخ والإرسال لمهندس أندرو عبر الواتساب.
+                    </p>
+                </div>
+                <button class="btn" style="width:100%;padding:14px;margin-top:10px;" onclick="switchMainTab('mcq')">🚀 ابدأ الواجب الآن</button>
+            </section>
+        </div>
+
+        <!-- تبويب الاختياري -->
+        <div class="tab-content active" id="tab-mcq">
+            <section class="card" id="mcq-setup">
+                <h2>📝 الجزء الأول: 20 سؤال اختياري (تقنيات التشفير والمصادقة)</h2>
+                <p style="color:#a7a9be;">حل إلكتروني — اختر الإجابة الصحيحة لكل سؤال</p>
+                <div style="margin:15px 0;">
+                    <label style="display:block;margin-bottom:6px;font-weight:700;">👤 اسمك الثلاثي:</label>
+                    <input type="text" id="student-name-input" placeholder="اكتب اسمك هنا..." style="width:100%;padding:12px;background:var(--bg-color);border:1px solid var(--border-color);border-radius:8px;color:#fff;font-size:1rem;">
+                </div>
+                <button class="btn" style="width:100%;padding:14px;" onclick="startMcq()">🚀 ابدأ الاختياري</button>
+            </section>
+
+            <section class="card" id="mcq-container" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <h2 id="mcq-title" style="color:#fffffe;">السؤال 1</h2>
+                    <span class="badge badge-accent" id="mcq-progress">1 من 20</span>
+                </div>
+                <div id="mcq-area"></div>
+                <div id="mcq-feedback"></div>
+                <div class="nav-controls">
+                    <button class="btn btn-secondary" id="prev-mcq" onclick="navigateMcq(-1)">السابق</button>
+                    <button class="btn" style="background:var(--accent-color);" onclick="checkMcq()">🔍 تحقق</button>
+                    <button class="btn btn-secondary" id="next-mcq" onclick="navigateMcq(1)">التالي</button>
+                </div>
+                <button class="btn btn-success" style="width:100%;margin-top:20px;padding:14px;" onclick="finishMcq()">✔ إنهاء الاختياري والانتقال للمقالي</button>
+            </section>
+        </div>
+
+        <!-- تبويب المقالي -->
+        <div class="tab-content" id="tab-essay">
+            <section class="card" id="essay-container" style="display:none;">
+                <h2>✍️ الجزء الثاني: 10 أسئلة مقالية (تطبيقات التشفير والأمان)</h2>
+
+                <div class="essay-questions-list">
+                    <h3>📋 الأسئلة (اقرأها كلها قبل الحل):</h3>
+                    <div id="essay-questions-display"></div>
+                </div>
+
+                <div class="info-block">
+                    <strong style="color:#fff;">🎯 اختر طريقة الحل (لكل الأسئلة معًا):</strong>
+                </div>
+
+                <div class="mode-selector-box">
+                    <button class="mode-btn-big active" data-mode="electronic" onclick="selectEssayMode('electronic')">
+                        <span class="icon-big">💻</span>
+                        حل إلكتروني
+                        <div class="desc">لكل سؤال مربع خاص به</div>
+                    </button>
+                    <button class="mode-btn-big" data-mode="paper" onclick="selectEssayMode('paper')">
+                        <span class="icon-big">📷</span>
+                        حل ورقي
+                        <div class="desc">صوّر ورقتك (حتى 3 صور) وارفعها</div>
+                    </button>
+                </div>
+
+                <!-- محتوى الحل الإلكتروني -->
+                <div class="mode-content active" id="mode-electronic">
+                    <div class="info-block success">
+                        💡 اكتب إجابة كل سؤال في المربع المخصص له
+                    </div>
+                    <div id="essay-electronic-items"></div>
+                </div>
+
+                <!-- محتوى الحل الورقي -->
+                <div class="mode-content" id="mode-paper">
+                    <div class="api-key-mini">
+                        <label>🔑 مفتاح Gemini (للتحويل من صورة لنص):</label>
+                        <input type="password" id="api-key-input" placeholder="AQ.Ab8RN6... الصق مفتاحك هنا" autocomplete="off">
+                        <div class="hint">
+                            💡 مش عندك مفتاح؟ اطلبه مجانًا من <a href="https://aistudio.google.com/api-keys" target="_blank" style="color:var(--accent-glow);">Google AI Studio</a>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                            <button class="btn btn-success btn-sm" onclick="saveApiKey()">💾 حفظ المفتاح</button>
+                            <a href="https://aistudio.google.com/api-keys" target="_blank" class="btn btn-warning btn-sm" style="text-decoration:none;">🔑 فتح AI Studio</a>
+                            <button class="btn btn-secondary btn-sm" onclick="clearApiKey()">🗑️ حذف</button>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('paper-file-input').click()">
+                        <span class="icon">📤</span>
+                        <h4>اضغط لرفع صور إجابتك الورقية (حتى 3 صور)</h4>
+                        <p>حل كل الأسئلة في ورقة، صوّرها، وارفعها</p>
+                        <p style="font-size:0.75rem;color:#6a6a8a;">PNG · JPG · JPEG — بحد أقصى 10 ميجابايت للصورة</p>
+                        <input type="file" id="paper-file-input" accept="image/*" multiple onchange="handlePaperFiles(event)">
+                    </div>
+
+                    <div class="paper-images-grid" id="paper-images-grid"></div>
+
+                    <div id="paper-convert-area" style="display:none;margin-top:15px;">
+                        <button class="btn btn-warning" id="paper-convert-btn" style="width:100%;padding:14px;font-size:1.05rem;" onclick="convertPaperImages()">
+                            🚀 تحويل الصور إلى نص
+                        </button>
+                    </div>
+
+                    <div class="paper-status" id="paper-status"></div>
+
+                    <div class="paper-text-result" id="paper-text-result">
+                        <strong>✅ النص المستخرج (راجع وعدّل ثم أضف أرقام الأسئلة):</strong>
+                        <textarea id="paper-extracted-text" placeholder="النص المستخرج من الصور..." oninput="savePaperExtractedText(this.value)"></textarea>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" style="width:100%;margin-top:25px;padding:14px;font-size:1.05rem;" onclick="finishEssay()">✔ إنهاء الواجب وعرض النتيجة</button>
+            </section>
+        </div>
+
+        <!-- تبويب النتيجة -->
+        <div class="tab-content" id="tab-result">
+            <section class="card" id="result-container" style="display:none;">
+                <h2>🎉 نتيجة الواجب</h2>
+                <p id="score-summary" style="color:#a7a9be;font-size:1.1rem;line-height:2;"></p>
+                <div id="report-details-container" class="report-details"></div>
+                <div class="certificate-box" id="certificate">
+                    <h2>📜 شهادة إتمام</h2>
+                    <p>تشهد أكاديمية كودجي بأن الطالب/الطالبة:</p>
+                    <div class="student-name" id="cert-name">—</div>
+                    <p>قد أتم بنجاح واجب <b>الدرس الأول: تقنيات التشفير والمصادقة (الوحدة الثانية)</b></p>
+                    <p class="cert-score" id="cert-score">🌟 النتيجة: 0%</p>
+                    <div style="margin-top:25px;font-size:0.85rem;color:#8892b0;">📅 تم التقييم آلياً بواسطة منصة كودجي 🤖</div>
+                </div>
+
+                <div style="margin-top:25px;">
+                    <button class="btn btn-copy" onclick="copyReportToClipboard()">
+                        📋 انسخ التقرير وارسله عبر الواتساب لمهندس أندرو 01555772562
+                    </button>
+                    <div class="whatsapp-hint">
+                        <span>💡</span>
+                        بعد الضغط على الزر، اذهب إلى واتساب وألصق التقرير (Paste) وأرسله للمهندس أندرو
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px;">
+                    <button class="btn btn-secondary" onclick="location.reload()">🔄 إعادة الواجب</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // بيانات أسئلة الاختياري (20 سؤال) - الدرس الأول الوحدة الثانية
+        // ============================================================
+        const mcqQuestions = [
+            { q: "ما التقنية التي تُستخدم أساساً لتشفير بيانات الجلسة بسرعة وكفاءة عالية بعد اكتمال عملية المصافحة واتفاق الأمان؟",
+              opts: ["التشفير بالمفتاح العام", "التشفير المتماثل (Symmetric Encryption)", "التوقيع الرقمي", "الشهادة الرقمية"], ans: 1 },
+            { q: "ماذا تُسمى الخطوات الخاصة بإنشاء الاتصال الآمن والتحقق من هوية الخادم واسم النطاق عبر بروتوكول HTTPS؟",
+              opts: ["مصافحة TLS (TLS Handshake)", "التوقيع الرقمي", "المصادقة الثنائية (2FA)", "التشفير المتماثل"], ans: 0 },
+            { q: "أي من التقنيات التالية تساعد المتصفح على التحقق من هوية الخادم وارتباط الشهادة باسم النطاق الذي يتصل به؟",
+              opts: ["التشفير المتماثل", "التوقيع الرقمي", "الشهادة الرقمية (Digital Certificate)", "المصادقة الثنائية"], ans: 2 },
+            { q: "أي من التقنيات الآتية تكتشف التلاعب وانتحال الشخصية وتوفر دليلاً يدعم عدم التنصل (Non-repudiation)؟",
+              opts: ["التشفير المتماثل", "التوقيع الرقمي (Digital Signature)", "مصافحة TLS", "المصادقة الثنائية"], ans: 1 },
+            { q: "ما المقصود بمصطلح 'المصادقة الثنائية (2FA)' في سياق حماية الحسابات؟",
+              opts: [
+                "استخدام كلمتي مرور نصيتين متتاليتين",
+                "استخدام عاملين مستقلين من فئتين مختلفتين لإثبات الهوية",
+                "الاعتماد فقط على بصمة الأصبع والوجه معاً",
+                "استخدام اسم المستخدم مع البريد الإلكتروني"
+              ], ans: 1 },
+            { q: "ما الخيار الذي يمثل مثالاً صحيحاً لجمع عاملين من فئتين مختلفتين (المعرفة والحيازة) للمصادقة؟",
+              opts: [
+                "كلمة مرور + سؤال سري",
+                "كلمة مرور + كلمة مرور لمرة واحدة (OTP) مبعوثة للهاتف",
+                "بصمة أصبع + التعرف على الوجه",
+                "كلمة مرور + كلمة مرور ثانية"
+              ], ans: 1 },
+            { q: "لماذا يُعتبر تعيين كلمتي مرور متتاليتين مثالاً خاطئاً للمصادقة الثنائية (2FA)؟",
+              opts: [
+                "لأنهما ينتميان إلى نفس الفئة وهي عامل 'المعرفة'",
+                "لأنهما يستغرقان وقتاً طويلاً",
+                "لأن كلمات المرور لا تُشفر",
+                "لأنهما يعملان فقط على أجهزة الكمبيوتر"
+              ], ans: 0 },
+            { q: "ماذا يُقصد بمصطلح المصادقة متعددة العوامل (MFA)؟",
+              opts: [
+                "استخدام كلمة مرور معقدة جداً تحتوي على رموز",
+                "استخدام عاملين أو أكثر من فئات مختلفة (المعرفة، الحيازة، والسمات الحيوية)",
+                "تشفير الاتصال باستخدام المفتاح العام والخاص",
+                "الدخول تلقائياً من الأجهزة الموثوقة فقط"
+              ], ans: 1 },
+            { q: "أي من التالي يُعد مثالاً لعامل 'الحيازة (Possession)' في المصادقة؟",
+              opts: ["كلمة المرور أو PIN", "البطاقات الذكية أو رمز OTP المبعوث للهاتف", "بصمة العين أو الوجه", "السؤال السري الإضافي"], ans: 1 },
+            { q: "أي من التالي يُعد مثالاً لعامل 'السمات الحيوية (Biometrics)' في المصادقة؟",
+              opts: ["رمز SMS القصير", "بصمة الأصبع أو التعرف على الوجه", "كلمة السر الشخصية", "تطبيق المصادقة المخزن على الهاتف"], ans: 1 },
+            { q: "بروتوكول HTTP المنقول عبر اتصال TLS مؤمّن يوفر سرية البيانات وسلامتها أثناء النقل يُعرف بـ:",
+              opts: ["HTTPS", "FTP", "DNS", "SMTP"], ans: 0 },
+            { q: "زوج من المفاتيح المرتبطة يتكون من مفتاح عام ومفتاح خاص يُستخدم لتأمين بدء الاتصال هو:",
+              opts: ["التشفير بالمفتاح العام (Public-Key Cryptography)", "التشفير المتماثل", "التوقيع الرقمي", "الكيوبت الكمومي"], ans: 0 },
+            { q: "لماذا لا يتبادل اتصال HTTPS جميع البيانات باستخدام التشفير بالمفتاح العام؟",
+              opts: [
+                "لأن المفتاح العام غير آمن للتشفير",
+                "لأن التشفير بالمفتاح العام بطيء نسبياً مع الكميات الكبيرة من البيانات",
+                "لأن المتصفحات لا تدعم المفتاح العام",
+                "لأن التشفير المتماثل يمنع التلاعب"
+              ], ans: 1 },
+            { q: "عند الشراء عبر موقع تسوق إلكتروني، أي تقنية تُستخدم لمنع قراءة محتوى الاتصال من قِبل أطراف ثالثة؟",
+              opts: ["التشفير (TLS Encryption)", "التوقيع الرقمي", "الشهادة الرقمية", "المصادقة الثنائية"], ans: 0 },
+            { q: "أي من التقنيات التالية تضمن إثبات التوقيع على المعاملة المالية وتمنع إنكارها لاحقاً (عدم التنصل)؟",
+              opts: ["التشفير المتماثل", "الشهادة الرقمية", "التوقيع الرقمي", "بروتوكول HTTP"], ans: 2 },
+            { q: "ما الفائدة العملية لتعدد طبقات الأمان (التشفير + الشهادات + 2FA) في التطبيقات المصرفية؟",
+              opts: [
+                "إلغاء الحاجة لكلمات المرور نهائياً",
+                "تقليل المخاطر الشاملة؛ فإذا كُشفت كلمة المرور يظل الحساب محمياً بالعامل الثاني",
+                "تسريع عملية الاتصال بالإنترنت",
+                "جعل الاتصال مجانياً"
+              ], ans: 1 },
+            { q: "ماذا يضمن رمز القفل ووجود بروتوكول HTTPS في شريط عنوان المتصفح؟",
+              opts: [
+                "أن محتوى الموقع آمن وموثوق 100% وبدون أي مخاطر",
+                "أن الاتصال مشفّر والشهادة مطابقة للموقع، لكنه لا يعني الحماية المطلقة من الاحتيال",
+                "أن الجهاز خالٍ من الفيروسات",
+                "أن السرعة في أقصى معدلاتها"
+              ], ans: 1 },
+            { q: "كيف تساعد الشهادة الرقمية المتصفح أثناء مصافحة TLS؟",
+              opts: [
+                "تزيد من سرعة التحميل",
+                "تمكن المتصفح من التحقق من صحة الخادم وسلسلة الثقة ومطابقة اسم الموقع",
+                "تولد كلمة مرور جديدة للمستخدم",
+                "تخزن بيانات المستخدم في قاعدة البيانات"
+              ], ans: 1 },
+            { q: "في أي مرحلة من اتصال HTTPS يتم اشتقاق مفاتيح الجلسة (Session Keys)؟",
+              opts: ["أثناء مصافحة TLS", "بعد إغلاق الصفحة", "عند إدخال البريد الإلكتروني فقط", "أثناء طباعة الفاتورة"], ans: 0 },
+            { q: "إذا تسربت كلمة المرور الخاصة بمستخدم، كيف يساعد استخدام تطبيق المصادقة (Authenticator App) في حماية الحساب؟",
+              opts: [
+                "يقوم بتغيير كلمة السر تلقائياً",
+                "يمنع الدخول لأن المخترق لا يمتلك هاتف المستخدم لاستخرج الرمز المستقل (الحيازة)",
+                "يقوم بإغلاق حساب المستخدم نهائياً",
+                "يمسح البيانات من الخادم"
+              ], ans: 1 }
+        ];
+
+        // ============================================================
+        // بيانات أسئلة المقالي (10 أسئلة) - الدرس الأول الوحدة الثانية
+        // ============================================================
+        const essayQuestions = [
+            { q: "اشرح كيف تعمل اتصالات HTTPS على حماية الاتصال عبر الويب، وما دور بروتوكول TLS في توفير السرية والسلامة؟" },
+            { q: "ميّز بدقة بين دور التشفير المتماثل والتشفير بالمفتاح العام أثناء تدفق اتصال HTTPS، موضحاً سبب استخدام كل منهما في مرحلته المحددة." },
+            { q: "عرف مصطلح 'المصادقة الثنائية (2FA)'، واشرح كيف يقلل استخدام عامل مستقل ثانٍ من فئة 'الحيازة' من مخاطر الدخول غير المصرح به عند تسرب كلمة المرور." },
+            { q: "قارن بين الفروق الأساسية بين المصادقة الثنائية (2FA) والمصادقة متعددة العوامل (MFA) من حيث عدد وفئات العوامل مع ذكر أمثلة لـ (المعرفة، الحيازة، والسمات الحيوية)." },
+            { q: "اشرح بالتفصيل الخطوات الأساسية التي تحدث خلال 'مصافحة TLS (TLS Handshake)' بدءاً من إرسال الشهادة الرقمية وحتى التبديل للتشفير المتماثل." },
+            { q: "ناقش دور الشهادة الرقمية والتوقيع الرقمي، وميّز بين وظيفتهما الجوهرية في اكتشاف التلاعب وتأكيد هوية الخادم وعدم التنصل." },
+            { q: "اشرح سيناريو كاملاً لكيفية الجمع بين عدة تقنيات أمان (التشفير، الشهادات، 2FA، والتوقيع الرقمي) عند إتمام عملية شراء ودفع عبر متجر إلكتروني." },
+            { q: "فسر العبارة التالية: 'لا يعتمد الأمان عبر الإنترنت على تقنية واحدة فريدة، بل يتكون من طبقات حماية متكاملة تقرر تقليل المخاطر دون توفير حماية مطلقة'." },
+            { q: "ناقش لماذا يُعتبر تعيين كلمتي مرور متتاليتين خياراً غير مناسب لتمثيل المصادقة الثنائية، وكيف يمكن تعديله ليكون مصادقة ثنائية حقيقية؟" },
+            { q: "وضح كيف تساهم شهادة الموقع وسلسلة الثقة (Certificate Authority) في حماية المستخدم من الاتصال بالمواقع المزيفة أو المنتحلة." }
+        ];
+
+        // ============================================================
+        // متغيرات الحالة
+        // ============================================================
+        let studentName = '';
+        let currentMcqIndex = 0;
+        let mcqAnswers = new Array(mcqQuestions.length).fill(null);
+        let essayMode = 'electronic';
+        let essayElectronicAnswers = new Array(essayQuestions.length).fill('');
+        let essayPaperText = '';
+        let paperImages = [];
+        let mcqFinished = false;
+        let essayFinished = false;
+        let mcqTimer = null;
+        let timeLeft = 5400;
+        let quizStarted = false;
+
+        // ============================================================
+        // إدارة المفتاح
+        // ============================================================
+        const API_KEY_STORAGE = 'kodgy_gemini_api_key_v7';
+        const FALLBACK_MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-3.6-flash'];
+
+        function loadApiKey() {
+            const saved = localStorage.getItem(API_KEY_STORAGE);
+            if (saved && document.getElementById('api-key-input')) {
+                document.getElementById('api-key-input').value = saved;
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value.trim();
+            if (!key) { alert('⚠️ اكتب المفتاح الأول'); return; }
+            localStorage.setItem(API_KEY_STORAGE, key);
+            alert('✅ تم حفظ المفتاح في متصفحك');
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem(API_KEY_STORAGE);
+            document.getElementById('api-key-input').value = '';
+            alert('🗑️ تم حذف المفتاح');
+        }
+
+        function getApiKey() {
+            return localStorage.getItem(API_KEY_STORAGE) || (document.getElementById('api-key-input')?.value.trim() || '');
+        }
+
+        // ============================================================
+        // التنقل بين التبويبات
+        // ============================================================
+        function switchMainTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            document.querySelectorAll('.tab-nav-btn').forEach(el => el.classList.remove('active'));
+            document.querySelector(`.tab-nav-btn[data-tab="${tab}"]`).classList.add('active');
+        }
+
+        function updateProgress() {
+            const total = mcqQuestions.length + essayQuestions.length;
+            let done = 0;
+            mcqQuestions.forEach((q, idx) => { if (mcqAnswers[idx] !== null) done++; });
+            if (essayMode === 'electronic') {
+                essayElectronicAnswers.forEach(a => { if ((a || '').trim().length >= 5) done++; });
+            } else {
+                if (essayPaperText.trim().length >= 20) done += essayQuestions.length;
+            }
+            const pct = Math.min(100, (done / total) * 100);
+            document.getElementById('progress-fill').style.width = pct + '%';
+        }
+
+        // ============================================================
+        // الاختياري
+        // ============================================================
+        function startMcq() {
+            const nameInput = document.getElementById('student-name-input');
+            if (!nameInput.value.trim()) {
+                alert('⚠️ برجاء إدخال اسمك الثلاثي');
+                return;
+            }
+            studentName = nameInput.value.trim();
+            document.getElementById('mcq-setup').style.display = 'none';
+            document.getElementById('mcq-container').style.display = 'block';
+            document.getElementById('timer-box').style.display = 'block';
+            quizStarted = true;
+
+            if (mcqTimer) clearInterval(mcqTimer);
+            timeLeft = 5400;
+            mcqTimer = setInterval(function() {
+                timeLeft--;
+                let mins = Math.floor(timeLeft / 60);
+                let secs = timeLeft % 60;
+                document.getElementById('timer-display').textContent =
+                    (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs);
+                if (timeLeft <= 0) {
+                    clearInterval(mcqTimer);
+                    alert('⏰ انتهى الوقت! سيتم الانتقال للمقالي.');
+                    finishMcq();
+                }
+            }, 1000);
+
+            loadMcqQuestion(0);
+        }
+
+        function loadMcqQuestion(index) {
+            const q = mcqQuestions[index];
+            if (!q) return;
+            document.getElementById('mcq-title').textContent = `السؤال ${index + 1} من ${mcqQuestions.length}`;
+            document.getElementById('mcq-progress').textContent = `${index + 1} من ${mcqQuestions.length}`;
+
+            const area = document.getElementById('mcq-area');
+            let html = `<div class="question-text">${q.q}</div>`;
+            html += `<ul class="options-list">`;
+            q.opts.forEach((opt, oi) => {
+                const checked = mcqAnswers[index] === oi ? 'checked' : '';
+                html += `
+                    <li class="option-item" onclick="selectMcqOption(${index}, ${oi})" id="mcq-opt-${index}-${oi}">
+                        <input type="radio" name="mcq-${index}" id="mcq-radio-${index}-${oi}" value="${oi}" ${checked}>
+                        <label for="mcq-radio-${index}-${oi}" style="cursor:pointer;width:100%;display:block;">${opt}</label>
+                    </li>
+                `;
+            });
+            html += `</ul>`;
+            area.innerHTML = html;
+            document.getElementById('mcq-feedback').innerHTML = '';
+            document.getElementById('prev-mcq').disabled = (index === 0);
+            document.getElementById('next-mcq').disabled = (index === mcqQuestions.length - 1);
+            updateProgress();
+        }
+
+        function selectMcqOption(qIndex, optIdx) {
+            mcqAnswers[qIndex] = optIdx;
+            document.querySelectorAll(`#mcq-area .option-item`).forEach(item => {
+                item.classList.remove('correct', 'wrong');
+            });
+            document.getElementById('mcq-feedback').innerHTML = '';
+            updateProgress();
+        }
+
+        function checkMcq() {
+            const q = mcqQuestions[currentMcqIndex];
+            const selected = mcqAnswers[currentMcqIndex];
+            const fb = document.getElementById('mcq-feedback');
+            if (selected === null || selected === undefined) {
+                fb.innerHTML = `<div class="feedback-msg wrong">⚠️ لم تختر إجابة بعد.</div>`;
+                return;
+            }
+            const correct = q.ans === selected;
+            document.querySelectorAll('#mcq-area .option-item').forEach((item, idx) => {
+                item.classList.remove('correct', 'wrong');
+                if (idx === q.ans) item.classList.add('correct');
+                else if (idx === selected && !correct) item.classList.add('wrong');
+            });
+            if (correct) {
+                fb.innerHTML = `<div class="feedback-msg correct">🎉 إجابة صحيحة! أحسنت.</div>`;
+            } else {
+                fb.innerHTML = `<div class="feedback-msg wrong">❌ إجابة خاطئة. الإجابة الصحيحة هي: ${q.opts[q.ans]}</div>`;
+            }
+        }
+
+        function navigateMcq(delta) {
+            const newIdx = currentMcqIndex + delta;
+            if (newIdx >= 0 && newIdx < mcqQuestions.length) {
+                currentMcqIndex = newIdx;
+                loadMcqQuestion(currentMcqIndex);
+            }
+        }
+
+        function finishMcq() {
+            mcqFinished = true;
+            clearInterval(mcqTimer);
+            document.getElementById('timer-box').style.display = 'none';
+            document.getElementById('essay-container').style.display = 'block';
+            renderEssayQuestions();
+            renderElectronicItems();
+            switchMainTab('essay');
+        }
+
+        // ============================================================
+        // المقالي
+        // ============================================================
+        function renderEssayQuestions() {
+            const display = document.getElementById('essay-questions-display');
+            let html = '';
+            essayQuestions.forEach((q, idx) => {
+                html += `
+                    <div class="essay-question-item">
+                        <span class="num">س${idx + 1}:</span>${q.q}
+                    </div>
+                `;
+            });
+            display.innerHTML = html;
+            updateProgress();
+        }
+
+        function renderElectronicItems() {
+            const container = document.getElementById('essay-electronic-items');
+            let html = '';
+            essayQuestions.forEach((q, idx) => {
+                const answer = essayElectronicAnswers[idx] || '';
+                const isAnswered = answer.trim().length >= 5;
+                html += `
+                    <div class="essay-each-item ${isAnswered ? 'answered' : ''}" id="essay-item-${idx}">
+                        <div class="essay-each-header">
+                            <span class="essay-each-num">س${idx + 1}</span>
+                            <span class="essay-each-text">${q.q}</span>
+                        </div>
+                        <textarea id="essay-answer-${idx}" placeholder="اكتب إجابتك للسؤال ${idx + 1} هنا..." oninput="updateElectronicAnswer(${idx}, this.value)">${answer}</textarea>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateElectronicAnswer(idx, value) {
+            essayElectronicAnswers[idx] = value;
+            const item = document.getElementById(`essay-item-${idx}`);
+            if (item) {
+                item.classList.toggle('answered', (value || '').trim().length >= 5);
+            }
+            updateProgress();
+        }
+
+        function selectEssayMode(mode) {
+            essayMode = mode;
+            document.querySelectorAll('.mode-btn-big').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            document.getElementById('mode-electronic').classList.toggle('active', mode === 'electronic');
+            document.getElementById('mode-paper').classList.toggle('active', mode === 'paper');
+            updateProgress();
+        }
+
+        function savePaperExtractedText(value) {
+            essayPaperText = value;
+            updateProgress();
+        }
+
+        // ============================================================
+        // رفع الصور (حتى 3 صور)
+        // ============================================================
+        function handlePaperFiles(event) {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+
+            let added = 0;
+            let skipped = 0;
+
+            files.forEach(file => {
+                if (!file.type.startsWith('image/')) { skipped++; return; }
+                if (file.size > 10 * 1024 * 1024) { skipped++; return; }
+                if (paperImages.length >= 3) { skipped++; return; }
+
+                const id = 'img_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const imgObj = { id, file, base64: null };
+                paperImages.push(imgObj);
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imgObj.base64 = e.target.result;
+                    renderPaperImages();
+                };
+                reader.readAsDataURL(file);
+                added++;
+            });
+
+            if (skipped > 0) {
+                if (paperImages.length >= 3 && added === 0) {
+                    alert('⚠️ الحد الأقصى 3 صور فقط');
+                } else {
+                    alert(`⚠️ تم تخطي ${skipped} ملف (مش صورة أو أكبر من 10MB أو تجاوز الحد)`);
+                }
+            }
+            event.target.value = '';
+        }
+
+        function renderPaperImages() {
+            const grid = document.getElementById('paper-images-grid');
+            grid.innerHTML = paperImages.map(img => `
+                <div class="paper-image-card">
+                    <button class="remove-btn" onclick="removePaperImage('${img.id}', event)" title="حذف">×</button>
+                    <div class="img-wrapper">
+                        ${img.base64 ? `<img src="${img.base64}" alt="${img.file.name}">` : '<div style="color:#4a4a6a;font-size:2rem;">🖼️</div>'}
+                    </div>
+                    <div class="img-info">
+                        <div class="img-name" title="${img.file.name}">${img.file.name}</div>
+                        <div>${(img.file.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('paper-convert-area').style.display = paperImages.length > 0 ? 'block' : 'none';
+            document.getElementById('paper-convert-btn').disabled = false;
+            updateProgress();
+        }
+
+        function removePaperImage(id, event) {
+            if (event) event.stopPropagation();
+            paperImages = paperImages.filter(img => img.id !== id);
+            if (paperImages.length === 0) {
+                essayPaperText = '';
+                document.getElementById('paper-extracted-text').value = '';
+                document.getElementById('paper-text-result').classList.remove('show');
+                document.getElementById('paper-status').classList.remove('show');
+            }
+            renderPaperImages();
+        }
+
+        // Drag & Drop
+        const uploadZone = document.getElementById('upload-zone');
+        ['dragenter', 'dragover'].forEach(evt => {
+            uploadZone.addEventListener(evt, e => {
+                e.preventDefault(); e.stopPropagation();
+                uploadZone.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            uploadZone.addEventListener(evt, e => {
+                e.preventDefault(); e.stopPropagation();
+                uploadZone.classList.remove('dragover');
+            });
+        });
+        uploadZone.addEventListener('drop', e => {
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length) {
+                handlePaperFiles({ target: { files: files } });
+            }
+        });
+
+        // ============================================================
+        // تحويل الصور إلى نص
+        // ============================================================
+        async function callGeminiAPI(apiKey, model, base64Data, mimeType) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: "استخرج كل النص العربي المكتوب بخط اليد في هذه الصورة. اكتب النص كما هو بدون أي إضافات أو تعليقات. حافظ على ترتيب الأسئلة والإجابات. لا تضف شرح أو مقدمات." },
+                            { inline_data: { mime_type: mimeType, data: base64Data } }
+                        ]
+                    }],
+                    generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+                })
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                const err = new Error(errData.error?.message || `HTTP ${response.status}`);
+                err.status = response.status;
+                throw err;
+            }
+            const data = await response.json();
+            return (data.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+        }
+
+        async function convertPaperImages() {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                alert('⚠️ للحل الورقي، محتاج مفتاح Gemini. الصقه في الخانة فوق.');
+                return;
+            }
+            if (paperImages.length === 0) {
+                alert('⚠️ ارفع صورة الأول');
+                return;
+            }
+
+            const statusBox = document.getElementById('paper-status');
+            const convertBtn = document.getElementById('paper-convert-btn');
+            convertBtn.disabled = true;
+            convertBtn.textContent = '⏳ جاري التحويل...';
+            statusBox.className = 'paper-status loading show';
+
+            let combinedText = '';
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < paperImages.length; i++) {
+                const img = paperImages[i];
+                statusBox.innerHTML = `⏳ جاري تحويل الصورة ${i + 1} من ${paperImages.length}... <span class="spinner-sm"></span>`;
+
+                const base64Data = img.base64.split(',')[1];
+                const mimeType = img.file.type || 'image/jpeg';
+                let imgSuccess = false;
+
+                for (let m = 0; m < FALLBACK_MODELS.length; m++) {
+                    const model = FALLBACK_MODELS[m];
+                    try {
+                        const text = await callGeminiAPI(apiKey, model, base64Data, mimeType);
+                        if (!text) throw new Error('لا يوجد نص');
+
+                        if (combinedText) {
+                            combinedText += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n📄 ${img.file.name}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                        }
+                        combinedText += text;
+                        imgSuccess = true;
+                        successCount++;
+                        break;
+                    } catch (error) {
+                        const errMsg = error.message || '';
+                        if (errMsg.includes('API_KEY_INVALID') || errMsg.includes('API key not valid') || errMsg.includes('permission') || error.status === 401 || error.status === 403) {
+                            statusBox.className = 'paper-status error show';
+                            statusBox.innerHTML = `❌ المفتاح غلط أو منتهي — اطلب مفتاح جديد`;
+                            convertBtn.disabled = false;
+                            convertBtn.textContent = '🚀 تحويل الصور إلى نص';
+                            return;
+                        }
+                    }
+                }
+                if (!imgSuccess) failCount++;
+            }
+
+            essayPaperText = combinedText.trim();
+            document.getElementById('paper-extracted-text').value = essayPaperText;
+            document.getElementById('paper-text-result').classList.add('show');
+
+            if (failCount === 0) {
+                statusBox.className = 'paper-status success show';
+                statusBox.innerHTML = `✅ تم تحويل جميع الصور (${successCount}) بنجاح! راجع النص وعدّل أي خطأ.`;
+            } else if (successCount > 0) {
+                statusBox.className = 'paper-status success show';
+                statusBox.innerHTML = `✅ تم تحويل ${successCount} صورة. ⚠️ فشل ${failCount} صورة.`;
+            } else {
+                statusBox.className = 'paper-status error show';
+                statusBox.innerHTML = `❌ فشل تحويل جميع الصور. تأكد من المفتاح والاتصال.`;
+            }
+
+            convertBtn.disabled = false;
+            convertBtn.textContent = '🚀 تحويل الصور إلى نص';
+            updateProgress();
+        }
+
+        // ============================================================
+        // إنهاء الواجب
+        // ============================================================
+        function finishEssay() {
+            essayFinished = true;
+            showResult();
+            switchMainTab('result');
+        }
+
+        function showResult() {
+            let mcqCorrect = 0;
+            let mcqAnswered = 0;
+            mcqQuestions.forEach((q, idx) => {
+                if (mcqAnswers[idx] !== null) mcqAnswered++;
+                if (mcqAnswers[idx] === q.ans) mcqCorrect++;
+            });
+
+            let essayAnswered = 0;
+            let essayText = '';
+            if (essayMode === 'electronic') {
+                essayElectronicAnswers.forEach(a => { if ((a || '').trim().length >= 5) essayAnswered++; });
+                essayText = essayElectronicAnswers.map((a, i) => `س${i+1}: ${a || 'لم يجب'}`).join('\n\n');
+            } else {
+                if (essayPaperText.trim().length >= 20) essayAnswered = essayQuestions.length;
+                essayText = essayPaperText;
+            }
+
+            const mcqPercent = Math.round((mcqCorrect / mcqQuestions.length) * 100);
+            const essayPercent = Math.round((essayAnswered / essayQuestions.length) * 100);
+            const overall = Math.round((mcqPercent + essayPercent) / 2);
+
+            document.getElementById('score-summary').innerHTML = `
+                📊 <b style="color:#fff;">النتيجة النهائية:</b> ${overall}%<br>
+                📝 الاختياري: ${mcqCorrect}/${mcqQuestions.length} (${mcqPercent}%)<br>
+                ✍️ المقالي: ${essayAnswered}/${essayQuestions.length} (${essayPercent}%)<br>
+                <span style="font-size:0.9rem;opacity:0.8;">تم الإجابة على ${mcqAnswered} من ${mcqQuestions.length} سؤال اختياري</span>
+            `;
+
+            let reportHTML = `<h3 style="color:#fff;">📋 التقرير الشامل</h3>`;
+
+            reportHTML += `<h4 style="color:var(--accent-glow);margin:15px 0 10px 0;">📝 الاختياري (${mcqQuestions.length} سؤال)</h4>`;
+            mcqQuestions.forEach((q, idx) => {
+                const num = idx + 1;
+                const userAns = mcqAnswers[idx];
+                const isCorrect = userAns === q.ans;
+                const correctText = q.opts[q.ans];
+                const userText = userAns !== null ? q.opts[userAns] : 'لم يجب';
+                reportHTML += `
+                    <div class="q-item">
+                        <div class="q-num">س${num}:</div>
+                        <div>${q.q}</div>
+                        <div>📌 الصحيح: <span class="correct-ans">${correctText}</span></div>
+                        <div>👤 إجابتك: <span class="${isCorrect ? 'correct-ans' : 'wrong-ans'}">${userText}</span> ${isCorrect ? '✅' : '❌'}</div>
+                    </div>
+                `;
+            });
+
+            const modeLabel = essayMode === 'electronic' ? '💻 إلكتروني' : '📷 ورقي';
+            reportHTML += `<h4 style="color:#7c6bb5;margin:20px 0 10px 0;">✍️ المقالي (${essayQuestions.length} سؤال) — ${modeLabel}</h4>`;
+
+            if (essayMode === 'electronic') {
+                essayQuestions.forEach((q, idx) => {
+                    const answer = essayElectronicAnswers[idx] || 'لم يجب';
+                    reportHTML += `
+                        <div class="q-item">
+                            <div class="q-num">س${idx + 1}:</div>
+                            <div>${q.q}</div>
+                            <div>👤 إجابتك: <span class="user-ans">${answer}</span></div>
+                        </div>
+                    `;
+                });
+            } else {
+                reportHTML += `
+                    <div class="q-item">
+                        <div class="q-num">إجابتك (من الصور):</div>
+                        <div style="white-space:pre-wrap;color:var(--warning-color);padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;margin-top:8px;">${essayText.trim() || 'لم يجب'}</div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('report-details-container').innerHTML = reportHTML;
+            document.getElementById('cert-name').textContent = studentName || 'طالب أكاديمية كودجي';
+            document.getElementById('cert-score').textContent = `🌟 النتيجة: ${overall}%`;
+            document.getElementById('result-container').style.display = 'block';
+
+            window._resultData = {
+                mcqCorrect, mcqAnswered, mcqTotal: mcqQuestions.length, mcqPercent,
+                essayAnswered, essayTotal: essayQuestions.length, essayPercent, overall,
+                essayText, essayMode
+            };
+        }
+
+        // ============================================================
+        // نسخ التقرير
+        // ============================================================
+        function copyReportToClipboard() {
+            const data = window._resultData || {};
+            let lines = [];
+            lines.push(`مرحباً مهندس أندرو 👋`);
+            lines.push('');
+            lines.push(`الطالب/الطالبة: ${studentName || 'طالب أكاديمية كودجي'}`);
+            lines.push(`الدرس: الأول (الوحدة الثانية) - تقنيات التشفير والمصادقة`);
+            lines.push(`📊 النتيجة النهائية: ${data.overall || 0}%`);
+            lines.push('');
+            lines.push(`📝 الاختياري: ${data.mcqCorrect || 0}/${data.mcqTotal || 0} (${data.mcqPercent || 0}%)`);
+            lines.push(`✍️ المقالي: ${data.essayAnswered || 0}/${data.essayTotal || 0} (${data.essayPercent || 0}%)`);
+            lines.push('');
+            lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+            lines.push(`📝 الاختياري:`);
+            lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+            mcqQuestions.forEach((q, idx) => {
+                const num = idx + 1;
+                const userAns = mcqAnswers[idx];
+                const isCorrect = userAns === q.ans;
+                const correctText = q.opts[q.ans];
+                const userText = userAns !== null ? q.opts[userAns] : 'لم يجب';
+                lines.push(`س${num}: ${q.q}`);
+                lines.push(`   صح: ${correctText} | إجابتي: ${userText} ${isCorrect ? '✅' : '❌'}`);
+            });
+            lines.push('');
+            lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+            lines.push(`✍️ المقالي (${data.essayMode === 'electronic' ? 'إلكتروني' : 'ورقي'}):`);
+            lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+            if (data.essayMode === 'electronic') {
+                essayQuestions.forEach((q, idx) => {
+                    const answer = essayElectronicAnswers[idx] || 'لم يجب';
+                    lines.push(`س${idx + 1}: ${q.q}`);
+                    lines.push(`   إجابتي: ${answer}`);
+                });
+            } else {
+                lines.push(data.essayText || 'لم يجب');
+            }
+            lines.push('');
+            lines.push(`تم التقييم بواسطة منصة كودجي 🤖`);
+            lines.push(`📅 ${new Date().toLocaleDateString('ar-EG')}`);
+
+            const fullReport = lines.join('\n');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(fullReport).then(showCopySuccess).catch(() => fallbackCopy(fullReport));
+            } else {
+                fallbackCopy(fullReport);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); showCopySuccess(); } catch (e) { alert('❌ فشل النسخ'); }
+            document.body.removeChild(ta);
+        }
+
+        function showCopySuccess() {
+            const el = document.getElementById('copy-success');
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        // ============================================================
+        // تحميل
+        // ============================================================
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('scroll-top');
+            if (window.scrollY > 400) btn.style.display = 'block';
+            else btn.style.display = 'none';
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            loadApiKey();
+            switchMainTab('instructions');
+        });
+
+        window.switchMainTab = switchMainTab;
+        window.startMcq = startMcq;
+        window.selectMcqOption = selectMcqOption;
+        window.checkMcq = checkMcq;
+        window.navigateMcq = navigateMcq;
+        window.finishMcq = finishMcq;
+        window.selectEssayMode = selectEssayMode;
+        window.updateElectronicAnswer = updateElectronicAnswer;
+        window.savePaperExtractedText = savePaperExtractedText;
+        window.handlePaperFiles = handlePaperFiles;
+        window.removePaperImage = removePaperImage;
+        window.convertPaperImages = convertPaperImages;
+        window.finishEssay = finishEssay;
+        window.saveApiKey = saveApiKey;
+        window.clearApiKey = clearApiKey;
+        window.copyReportToClipboard = copyReportToClipboard;
+    </script>
+</body>
+</html>
